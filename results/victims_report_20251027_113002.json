@@ -1,0 +1,11 @@
+{
+  "74:4d:28:9f:3a:9d": {
+    "ip": "10.42.0.2",
+    "mac": "74:4d:28:9f:3a:9d",
+    "vendor": "Desconocido",
+    "hostname": "Desconocido",
+    "first_seen": "2025-10-27T11:28:02.088379",
+    "last_seen": "2025-10-27T11:29:41.699489",
+    "packet_count": 0
+  }
+}

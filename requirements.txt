@@ -1,0 +1,38 @@
+# Deep Learning
+tensorflow==2.15.0
+keras==2.15.0
+
+# Machine Learning
+scikit-learn==1.3.0
+xgboost==1.7.6
+
+# Data Processing
+pandas==2.0.3
+numpy==1.24.3
+
+# Network Analysis
+scapy==2.5.0
+
+# Visualization
+matplotlib==3.7.2
+seaborn==0.12.2
+plotly==5.15.0
+
+# Utilities
+joblib==1.3.2
+h5py==3.9.0
+tqdm==4.65.0
+
+# API (futuro)
+flask==2.3.2
+flask-cors==4.0.0
+
+# Logging
+colorlog==6.7.0
+
+# Configuration
+pyyaml==6.0.1
+python-dotenv==1.0.0
+
+# System monitoring
+psutil==5.9.5

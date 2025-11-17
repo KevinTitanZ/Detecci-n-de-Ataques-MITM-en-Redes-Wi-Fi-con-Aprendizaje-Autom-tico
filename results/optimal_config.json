@@ -1,0 +1,8 @@
+{
+  "recommended_threshold": 0.25000000000000006,
+  "model_path": "models/mitm_detector.h5",
+  "scaler_path": "models/scaler.pkl",
+  "expected_recall": 0.9629629629629629,
+  "expected_precision": 0.7103825136612022,
+  "expected_accuracy": 0.7198067632850241
+}

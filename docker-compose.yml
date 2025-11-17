@@ -1,0 +1,173 @@
+version: '3.8'
+
+services:
+  # Detector principal en tiempo real
+  mitm-detector:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: mitm_detector_main
+    hostname: mitm-detector
+    privileged: true
+    network_mode: host
+    restart: unless-stopped
+    
+    volumes:
+      # Datos persistentes
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./results:/app/results
+      - ./alerts:/app/alerts
+      - ./logs:/app/logs
+      # Configuración
+      - ./config:/app/config
+      # Acceso a dispositivos de red
+      - /dev:/dev
+    
+    environment:
+      - DETECTOR_MODE=realtime
+      - INTERFACE=wlan0
+      - THRESHOLD=0.25
+      - LOG_LEVEL=INFO
+      - PYTHONPATH=/app
+    
+    command: ["detector", "--interface", "wlan0", "--threshold", "0.25"]
+    
+    labels:
+      - "com.mitm.service=detector"
+      - "com.mitm.version=1.0"
+
+  # Entrenador de modelos
+  mitm-trainer:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: mitm_trainer
+    profiles: ["training"]
+    
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./results:/app/results
+      - ./logs:/app/logs
+    
+    environment:
+      - DETECTOR_MODE=training
+      - LOG_LEVEL=INFO
+      - PYTHONPATH=/app
+    
+    command: ["trainer"]
+    
+    labels:
+      - "com.mitm.service=trainer"
+
+  # Comparador de modelos
+  mitm-comparator:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: mitm_comparator
+    profiles: ["analysis"]
+    
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./results:/app/results
+      - ./logs:/app/logs
+    
+    environment:
+      - DETECTOR_MODE=comparison
+      - LOG_LEVEL=INFO
+      - PYTHONPATH=/app
+    
+    command: ["comparator"]
+    
+    labels:
+      - "com.mitm.service=comparator"
+
+  # Capturador de tráfico
+  mitm-capturer:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: mitm_capturer
+    profiles: ["capture"]
+    privileged: true
+    network_mode: host
+    
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - /dev:/dev
+    
+    environment:
+      - DETECTOR_MODE=capture
+      - INTERFACE=wlan0
+      - CAPTURE_DURATION=300
+      - LOG_LEVEL=INFO
+    
+    command: ["capturer", "--interface", "wlan0", "--duration", "300"]
+
+  # Simulador de ataques
+  mitm-attacker:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: mitm_attacker
+    profiles: ["attack"]
+    privileged: true
+    network_mode: host
+    
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - /dev:/dev
+    
+    environment:
+      - DETECTOR_MODE=attack
+      - INTERFACE=wlan0
+      - LOG_LEVEL=INFO
+    
+    command: ["attacker", "--interface", "wlan0"]
+
+  # API Web (futuro)
+  mitm-api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: mitm_api
+    profiles: ["api"]
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./results:/app/results
+      - ./alerts:/app/alerts
+    
+    environment:
+      - DETECTOR_MODE=api
+      - API_HOST=0.0.0.0
+      - API_PORT=8080
+      - LOG_LEVEL=INFO
+    
+    command: ["api"]
+
+# Redes personalizadas (si no usas host)
+networks:
+  mitm-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Volúmenes persistentes
+volumes:
+  mitm-data:
+    driver: local
+  mitm-models:
+    driver: local
+  mitm-logs:
+    driver: local

@@ -1,0 +1,20 @@
+{
+  "filename": "mikrotik_normal_20251027_113351.pcap",
+  "label": "normal",
+  "timestamp": "2025-10-27T11:33:51.702328",
+  "duration": 0.0641934871673584,
+  "packet_count": 1,
+  "victims": [
+    "10.42.0.2"
+  ],
+  "destinations": [
+    "69.31.134.162"
+  ],
+  "stats": {
+    "tcp": 0,
+    "udp": 1,
+    "arp": 0,
+    "icmp": 0,
+    "other": 0
+  }
+}
