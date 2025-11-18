@@ -9,11 +9,32 @@ python3 scripts/capture_traffic.py --mode normal --duration 300 --interface wlan
 sudo python3 scripts/simple_attack_simulator.py --attack arp --duration 120
 sudo python3 scripts/simple_attack_simulator.py --attack dns --duration 120
 sudo python3 scripts/simple_attack_simulator.py --attack portscan --duration 120
+-- UNIVERSAL
+chmod +x scripts/universal_attack_simulator.py
+# ARP (lo que ya hiciste)
+sudo python3 scripts/universal_attack_simulator.py --attack arp --duration 120
+
+# DNS anómalo
+sudo python3 scripts/universal_attack_simulator.py --attack dns --duration 120
+
+# Escaneo de puertos
+sudo python3 scripts/universal_attack_simulator.py --attack portscan --duration 120
+
+# Inyección de tráfico malicioso
+sudo python3 scripts/universal_attack_simulator.py --attack injection --duration 120
+
+# Todos los ataques (ARP + DNS + Portscan + Inyección)
+sudo python3 scripts/universal_attack_simulator.py --attack all --duration 300
+
 
 # sirve para activiar el lugar donde estan las descargar en .venv
 source /home/kevin/mitm_detection_project/.venv/bin/activate
 
+
+python3 -m venv venv
 source .venv/bin/activate 
+
+
 
 # Instala dependecias que se necesitan
 pip install --upgrade pip
@@ -23,6 +44,8 @@ pip install tensorflow
 pip install pandas numpy scikit-learn matplotlib seaborn jupyter
 
 pip install xgboost
+
+pip install netifaces
 
 # Para poder entrenar EL MODELO priemro hay que entrar
 source .venv/bin/activate 
