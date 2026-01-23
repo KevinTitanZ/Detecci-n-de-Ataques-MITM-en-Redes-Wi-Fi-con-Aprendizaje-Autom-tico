@@ -13,6 +13,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, LSTM, Bidirectional, Dense, Dropout, Reshape
 import matplotlib.pyplot as plt
 import seaborn as sns
+import joblib  # ← NUEVO: Para guardar el scaler
+import os
 
 class MITMDetector:
     def __init__(self):
@@ -82,6 +84,11 @@ class MITMDetector:
         X_train_scaled = self.scaler.fit_transform(X_train)
         X_test_scaled = self.scaler.transform(X_test)
         
+        # ← NUEVO: Guardar el scaler INMEDIATAMENTE después de fit
+        os.makedirs('models', exist_ok=True)
+        joblib.dump(self.scaler, 'models/scaler.pkl')
+        print("✅ Scaler guardado en: models/scaler.pkl")
+        
         # Crear modelo
         self.model = self.create_model(X_train_scaled.shape[1])
         
@@ -106,20 +113,74 @@ class MITMDetector:
         print(classification_report(y_test, y_pred))
         
         # Matriz de confusión
+        os.makedirs('results', exist_ok=True)
         cm = confusion_matrix(y_test, y_pred)
         plt.figure(figsize=(8, 6))
         sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-        plt.title('Matriz de Confusión')
+        plt.title('Matriz de Confusión - CNN + Bi-LSTM')
         plt.ylabel('Verdadero')
         plt.xlabel('Predicho')
-        plt.savefig('results/confusion_matrix.png')
-        plt.show()
+        plt.savefig('results/confusion_matrix.png', dpi=300, bbox_inches='tight')
+        print("✅ Matriz de confusión guardada en: results/confusion_matrix.png")
         
         # Guardar modelo
         self.model.save('models/mitm_detector.h5')
-        print("Modelo guardado en: models/mitm_detector.h5")
+        print("✅ Modelo guardado en: models/mitm_detector.h5")
+        
+        # ← NUEVO: Guardar historial de entrenamiento
+        history_df = pd.DataFrame(history.history)
+        history_df.to_csv('results/training_history.csv', index=False)
+        print("✅ Historial guardado en: results/training_history.csv")
+        
+        # ← NUEVO: Gráfica de entrenamiento
+        self.plot_training_history(history)
         
         return history, X_test_scaled, y_test
+    
+    def plot_training_history(self, history):
+        """Graficar historial de entrenamiento"""
+        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+        
+        # Accuracy
+        axes[0, 0].plot(history.history['accuracy'], label='Train')
+        axes[0, 0].plot(history.history['val_accuracy'], label='Validation')
+        axes[0, 0].set_title('Accuracy')
+        axes[0, 0].set_xlabel('Epoch')
+        axes[0, 0].set_ylabel('Accuracy')
+        axes[0, 0].legend()
+        axes[0, 0].grid(True)
+        
+        # Loss
+        axes[0, 1].plot(history.history['loss'], label='Train')
+        axes[0, 1].plot(history.history['val_loss'], label='Validation')
+        axes[0, 1].set_title('Loss')
+        axes[0, 1].set_xlabel('Epoch')
+        axes[0, 1].set_ylabel('Loss')
+        axes[0, 1].legend()
+        axes[0, 1].grid(True)
+        
+        # Precision
+        axes[1, 0].plot(history.history['precision'], label='Train')
+        axes[1, 0].plot(history.history['val_precision'], label='Validation')
+        axes[1, 0].set_title('Precision')
+        axes[1, 0].set_xlabel('Epoch')
+        axes[1, 0].set_ylabel('Precision')
+        axes[1, 0].legend()
+        axes[1, 0].grid(True)
+        
+        # Recall
+        axes[1, 1].plot(history.history['recall'], label='Train')
+        axes[1, 1].plot(history.history['val_recall'], label='Validation')
+        axes[1, 1].set_title('Recall')
+        axes[1, 1].set_xlabel('Epoch')
+        axes[1, 1].set_ylabel('Recall')
+        axes[1, 1].legend()
+        axes[1, 1].grid(True)
+        
+        plt.tight_layout()
+        plt.savefig('results/training_history.png', dpi=300, bbox_inches='tight')
+        print("✅ Gráficas de entrenamiento guardadas en: results/training_history.png")
+        plt.close()
     
     def predict(self, X):
         """Hacer predicciones"""
@@ -131,11 +192,15 @@ class MITMDetector:
 
 def main():
     # Verificar que existe el dataset
-    dataset_path = 'data/processed/dataset_features.csv'
+    dataset_path = 'data/processed/combined_dataset.csv'  # ← CAMBIADO
+    
+    # Si no existe el combinado, buscar el original
+    if not os.path.exists(dataset_path):
+        dataset_path = 'data/processed/dataset_features.csv'
     
     if not os.path.exists(dataset_path):
         print(f"[-] No se encontró el dataset: {dataset_path}")
-        print("    Ejecuta primero: python3 scripts/extract_features.py")
+        print("    Ejecuta primero: python scripts/merge_datasets.py")
         return
     
     # Crear detector
@@ -151,11 +216,19 @@ def main():
     # Entrenar modelo
     history, X_test, y_test = detector.train(X, y, epochs=30)
     
-    print("\n=== ENTRENAMIENTO COMPLETADO ===")
+    print("\n" + "="*60)
+    print("🎉 ENTRENAMIENTO COMPLETADO")
+    print("="*60)
     print("Archivos generados:")
-    print("- models/mitm_detector.h5 (modelo entrenado)")
-    print("- results/confusion_matrix.png (matriz de confusión)")
+    print("  ✅ models/mitm_detector.h5 (modelo entrenado)")
+    print("  ✅ models/scaler.pkl (normalizador)")
+    print("  ✅ results/confusion_matrix.png")
+    print("  ✅ results/training_history.png")
+    print("  ✅ results/training_history.csv")
+    print("="*60)
+    print("\n🚀 Siguiente paso:")
+    print("   sudo venv/bin/python scripts/real_time_detector.py --interface eth0")
+    print("="*60)
 
 if __name__ == "__main__":
-    import os
     main()
